@@ -1,0 +1,46 @@
+---
+import mapaVenezuela from '../../public/Venezuela.svg?raw';
+---
+
+<div class="relative w-full max-w-3xl mx-auto">
+  <!-- Inyectamos el SVG directamente como HTML -->
+  <div id="map-container" class="w-full h-auto">
+    <Fragment set:html={mapaVenezuela} />
+  </div>
+
+  <!-- Tooltip -->
+  <div id="tooltip" class="hidden absolute bg-white p-2 rounded shadow-lg pointer-events-none z-50">
+    <p id="tooltip-text" class="text-sm font-bold"></p>
+  </div>
+</div>
+
+<style is:global>
+  /* Ahora que el SVG es parte del DOM, puedes darle estilo directamente */
+  #map-container svg path {
+    @apply fill-[#7DAA82] stroke-white stroke-[0.5] transition-all duration-200 cursor-pointer;
+  }
+  #map-container svg path:hover {
+    @apply fill-[#5A8E60];
+  }
+</style>
+
+<script>
+  // El script sigue funcionando igual para la interactividad
+  const tooltip = document.getElementById('tooltip') as HTMLElement;
+  const tooltipText = document.getElementById('tooltip-text') as HTMLElement;
+  const paths = document.querySelectorAll('#map-container svg path');
+
+  paths.forEach(path => {
+    path.addEventListener('mouseenter', (e: any) => {
+      tooltip.classList.remove('hidden');
+      tooltipText.innerText = e.target.id || 'Estado';
+    });
+
+    path.addEventListener('mousemove', (e) => {
+      tooltip.style.left = `${e.clientX + 10}px`;
+      tooltip.style.top = `${e.clientY + 10}px`;
+    });
+
+    path.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+  });
+</script>
