@@ -15,6 +15,7 @@ import mapaVenezuela from '../../public/Venezuela.svg?raw';
 </div>
 
 <style is:global>
+  @reference "../styles/global.css"
   /* Ahora que el SVG es parte del DOM, puedes darle estilo directamente */
   #map-container svg path {
     @apply fill-[#7DAA82] stroke-white stroke-[0.5] transition-all duration-200 cursor-pointer;
@@ -37,7 +38,7 @@ import mapaVenezuela from '../../public/Venezuela.svg?raw';
     });
 
     path.addEventListener('mousemove', (e) => {
-      tooltip.style.left = `${e.clientX + 10}px`;
+      tooltip.style.left = `${ e.clientX - 200}px`;
       tooltip.style.top = `${e.clientY + 10}px`;
     });
 
