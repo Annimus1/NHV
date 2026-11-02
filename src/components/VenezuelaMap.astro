@@ -1,47 +1,116 @@
 ---
-import mapaVenezuela from '../../public/Venezuela.svg?raw';
+import mapaVenezuela from "../../public/Venezuela.svg?raw";
+import { addStateMetadata } from "../lib/venezuela-map";
+
+const mapSvg = addStateMetadata(mapaVenezuela);
 ---
 
-<div class="relative w-full max-w-3xl mx-auto">
-  <!-- Inyectamos el SVG directamente como HTML -->
-  <div id="map-container" class="w-full h-auto">
-    <Fragment set:html={mapaVenezuela} />
+<div id="map-wrapper" class="relative mx-auto w-full max-w-3xl">
+  <div id="map-container" class="w-full">
+    <Fragment set:html={mapSvg} />
   </div>
 
-  <!-- Tooltip -->
-  <div id="tooltip" class="hidden absolute bg-white p-2 rounded shadow-lg pointer-events-none z-50">
-    <p id="tooltip-text" class="text-sm font-bold"></p>
+  <div
+    id="tooltip"
+    role="tooltip"
+    class="pointer-events-none absolute z-50 hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-slate-900 shadow-lg"
+  >
   </div>
 </div>
 
 <style is:global>
-  @reference "../styles/global.css"
-  /* Ahora que el SVG es parte del DOM, puedes darle estilo directamente */
-  #map-container svg path {
-    @apply fill-[#7DAA82] stroke-white stroke-[0.5] transition-all duration-200 cursor-pointer;
+  @reference "../styles/global.css";
+
+  #map-container svg {
+    display: block;
+    width: 100%;
+    height: auto;
   }
-  #map-container svg path:hover {
-    @apply fill-[#5A8E60];
+
+  #map-container svg path[data-state] {
+    @apply cursor-pointer stroke-white transition-colors duration-200;
+    fill: #7daa82;
+    stroke-width: 0.5;
+  }
+
+  #map-container svg path[data-state]:hover,
+  #map-container svg path[data-state]:focus-visible {
+    fill: #5a8e60;
+    outline: none;
+  }
+
+  #map-container svg path[data-state].is-selected {
+    fill: #2f6b3f;
   }
 </style>
 
 <script>
-  // El script sigue funcionando igual para la interactividad
-  const tooltip = document.getElementById('tooltip') as HTMLElement;
-  const tooltipText = document.getElementById('tooltip-text') as HTMLElement;
-  const paths = document.querySelectorAll('#map-container svg path');
+  const wrapper = document.getElementById("map-wrapper") as HTMLElement | null;
+  const tooltip = document.getElementById("tooltip") as HTMLElement | null;
+  const states = Array.from(
+    document.querySelectorAll<SVGPathElement>("#map-container svg path[data-state]"),
+  );
 
-  paths.forEach(path => {
-    path.addEventListener('mouseenter', (e: any) => {
-      tooltip.classList.remove('hidden');
-      tooltipText.innerText = e.target.id || 'Estado';
+  if (wrapper && tooltip && states.length > 0) {
+    const positionTooltip = (clientX: number, clientY: number) => {
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const offset = 14;
+
+      let left = clientX - wrapperRect.left + offset;
+      let top = clientY - wrapperRect.top + offset;
+
+      if (left + tooltipRect.width > wrapper.clientWidth) {
+        left = clientX - wrapperRect.left - tooltipRect.width - offset;
+      }
+      if (top + tooltipRect.height > wrapper.clientHeight) {
+        top = clientY - wrapperRect.top - tooltipRect.height - offset;
+      }
+
+      tooltip.style.left = `${Math.max(0, left)}px`;
+      tooltip.style.top = `${Math.max(0, top)}px`;
+    };
+
+    const showTooltip = (state: SVGPathElement, clientX: number, clientY: number) => {
+      tooltip.textContent = state.dataset.name ?? state.dataset.state ?? "";
+      tooltip.classList.remove("hidden");
+      positionTooltip(clientX, clientY);
+    };
+
+    const hideTooltip = () => tooltip.classList.add("hidden");
+
+    const selectState = (state: SVGPathElement) => {
+      states.forEach((item) => {
+        item.classList.remove("is-selected");
+        item.setAttribute("aria-pressed", "false");
+      });
+
+      state.classList.add("is-selected");
+      state.setAttribute("aria-pressed", "true");
+    };
+
+    states.forEach((state) => {
+      state.addEventListener("mouseenter", (event) => {
+        showTooltip(state, event.clientX, event.clientY);
+      });
+      state.addEventListener("mousemove", (event) => {
+        positionTooltip(event.clientX, event.clientY);
+      });
+      state.addEventListener("mouseleave", hideTooltip);
+
+      state.addEventListener("focus", () => {
+        const rect = state.getBoundingClientRect();
+        showTooltip(state, rect.left + rect.width / 2, rect.top + rect.height / 2);
+      });
+      state.addEventListener("blur", hideTooltip);
+
+      state.addEventListener("click", () => selectState(state));
+      state.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectState(state);
+        }
+      });
     });
-
-    path.addEventListener('mousemove', (e) => {
-      tooltip.style.left = `${ e.clientX - 200}px`;
-      tooltip.style.top = `${e.clientY + 10}px`;
-    });
-
-    path.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
-  });
+  }
 </script>
