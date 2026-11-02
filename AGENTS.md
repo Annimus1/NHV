@@ -31,6 +31,20 @@ Sections planned for the site. Keep this list updated as they take shape:
 4. Photo albums / trip posts.
 5. About us.
 
+Current state: only the home page exists. The map renders and highlights states; trips, albums, and the about section are not built yet.
+
+## Visual direction
+
+- Reference: https://lightshiprv.com/. Aim for fast, fluid, and editorial, not motion-heavy.
+- Avoid scroll-driven animation by default. Use it only in small, local accents; no aggressive pinning, long scrubbed sequences, or full-screen takeovers.
+- Approved patterns for the album area (designed in a throwaway mock, **not implemented** in this branch):
+  - stacking cards for upcoming trips (CSS `position: sticky` deck);
+  - subtle parallax on album cover photos (`animation-timeline: view()` with a static fallback);
+  - Astro View Transitions from a map state to its album (`ClientRouter` + shared `transition:name`);
+  - soft in-view reveals (opacity + small translate, `IntersectionObserver`, `prefers-reduced-motion` respected).
+- Prefer native CSS and browser APIs over GSAP, Swiper, or Swup. Add an animation library only when a specific effect cannot be done cheaply.
+- Do not hide content behind JS: progressive enhancement (for example, apply reveal opacity only when a `js` class is present).
+
 ## Tailwind v4 quirks
 
 - Tailwind is wired through the `@tailwindcss/vite` plugin in `astro.config.mjs` — there is **no `tailwind.config.js`**.
@@ -44,6 +58,7 @@ Sections planned for the site. Keep this list updated as they take shape:
 - `src/lib/venezuela-map.ts` decorates the SVG at build time: it adds `data-state` (slug), `data-name` (accented display name), and accessibility attributes to each state path. Target states with `[data-state]`, not raw ids.
 - The vendor SVG has data quirks handled by that decorator: Zulia's path is `id="VEV"` (its `name` is `Zulia`), a label circle is misspelled `Cogedes`, ids mix accented/unaccented names, and some ids contain spaces. Never depend on the raw ids.
 - The map must stay responsive: the SVG has fixed `width`/`height` attributes, so CSS forces `width: 100%; height: auto`.
+- The home hero is `min-h-[80vh]`, so the map section starts below the fold on most viewports; it is not visible until the user scrolls.
 - Clicking a state currently only highlights it; album navigation is not wired yet.
 
 ## Conventions
