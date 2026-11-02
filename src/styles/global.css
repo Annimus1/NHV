@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@theme {
+  --color-heading: #14532d;
+  --color-body: #3f4a42;
+}
+
+html {
+  color-scheme: light dark;
+}
