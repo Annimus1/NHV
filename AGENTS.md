@@ -31,7 +31,22 @@ Sections planned for the site. Keep this list updated as they take shape:
 4. Photo albums / trip posts.
 5. About us.
 
-Current state: only the home page exists. The map renders and highlights states; trips, albums, and the about section are not built yet.
+Current state: the home page exists. The map renders and highlights states. The trip/place content model, schema, helpers, and sample fixtures exist, but trips, albums, upcoming trips, place/state pages, and the about section are not built yet.
+
+## Content model
+
+Content collections are defined in `src/content.config.ts` and validated at build time; invalid frontmatter fails `pnpm build`.
+
+- `src/content/lugares/*.md` — canonical places. Fields: `name`, `state`, `coordinates` (`lat`/`lng`, decimal WGS84), `kind` (`beach`, `city`, `mountain`, `park`, `landmark`, `other`), `summary`, `draft`. A place is defined once and reused by every trip that visits it. The filename is the place slug (e.g. `/lugares/playa-choroni/`).
+- `src/content/trips/*.md` — one album per trip. Fields: `title`, `summary`, `status`, `startDate`, `endDate`, `states[]`, `places[]`, `cover` (`{ src, alt }`), `photos[]` (`{ src, alt, caption?, place?, credit? }`), `featured`, `draft`. The filename is the trip slug (e.g. `/viajes/aragua-2026-08/`). The Markdown body is the trip story; `photos[]` is the album.
+- `src/lib/venezuela-states.ts` — canonical list of the 25 state slugs and accented names. `states[]` and place `state` use `z.enum` from this list. Add states there, never as free strings.
+- Repeat visits: create a new trip (new slug/date) that references the same place. Albums are never merged. Place and state pages will aggregate trips newest-first.
+- Effective visited states are the union of a trip's explicit `states` and the states of its referenced `places`. `upcoming` trips do not mark states as visited; `ongoing` and `completed` do.
+- `status` is explicit, not derived from dates (`upcoming`, `ongoing`, `completed`). Dates only drive ordering and display. Use `draft: true` to hide unfinished entries.
+- Image paths in frontmatter are relative to the entry file (e.g. `../../assets/trips/aragua-2026-08/cover.jpg`). Photos live in `src/assets/trips/<trip-slug>/` as `cover.jpg` plus ordered `01-....jpg`. Export web-sized originals (max ~2400px long edge, sRGB, JPEG q~82, EXIF stripped). `alt` is required for covers and photos.
+- Helpers live in `src/lib/trips.ts`: `getTrips`, `getUpcomingTrips`, `getPlaces`, `getTripsByState`, `getTripsByPlace`, `getTripStates`, `getVisitedStates`, `getTripPlaces`, `getCover`. `getTripPlaces` throws on a missing place reference, so broken content fails the build once a page uses it.
+- Google Drive is an archive, not a production image host (unstable links, rate limits, no CDN or transforms). Export selected web-sized files into `src/assets`; use a real image CDN later if fully external hosting is needed.
+- The sample trips, places, and placeholder images are fixtures. Replace them with real content.
 
 ## Visual direction
 
